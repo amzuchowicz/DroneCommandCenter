@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Drone Command Center</string>
+
+    <string-array name="mental_command_array">
+        <item>Neutral</item>
+        <item>Push</item>
+        <item>Pull</item>
+        <item>Left</item>
+        <item>Right</item>
+    </string-array>
+
+    <string-array name="gesture_array">
+        <item>Take Off</item>
+        <item>Land</item>
+        <item>Forward</item>
+        <item>Backward</item>
+        <item>Left</item>
+        <item>Right</item>
+    </string-array>
+
+</resources>
