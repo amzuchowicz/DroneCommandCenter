@@ -1,5 +1,6 @@
 package com.aleks.dronecommandcenter.activities;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +26,8 @@ import org.wiigee.filter.LowPassFilter;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class GestureActivity extends AppCompatActivity {
 
@@ -43,6 +46,9 @@ public class GestureActivity extends AppCompatActivity {
     private Button btnRecognise;
     private Spinner spnCommand;
 
+    SharedPreferences prefs;
+    SharedPreferences.Editor editor;
+
     private boolean isTraining = false;
     private boolean isRecognising = false;
 
@@ -55,7 +61,19 @@ public class GestureActivity extends AppCompatActivity {
         wiigee.setTrainButton(TRAIN_BUTTON);
         wiigee.setRecognitionButton(RECOGNISE_BUTTON);
         wiigee.setCloseGestureButton(SAVE_BUTTON);
-        wiigee.getDevice().loadClassifire("test");
+        //wiigee.getDevice();
+
+        prefs = getSharedPreferences("com.aleks.dronecommandcenter.gestures", Context.MODE_PRIVATE);
+        editor = prefs.edit();
+
+        for(Map.Entry entry : prefs.getAll().entrySet()) {
+            if(entry != null) {
+                gestureIdCommand.put(Integer.parseInt((String) entry.getKey()), (Integer) entry.getValue());
+                //wiigee.getDevice().getProcessingUnit().loadGesture("Gesture" + entry.getKey());
+                gestureID++;
+            }
+        }
+        wiigee.getDevice().getProcessingUnit().loadClassifier("dcc_gestures");
 
         DroneCommandCenterApp app = (DroneCommandCenterApp) getApplicationContext();
         drone = app.getARDrone();
@@ -124,14 +142,18 @@ public class GestureActivity extends AppCompatActivity {
                 case (MotionEvent.ACTION_UP): {
                     wiigee.getDevice().fireButtonReleasedEvent(TRAIN_BUTTON);
                     //wiigee.getDevice().saveGesture(0, "test.txt");
+
                     wiigee.getDevice().fireButtonPressedEvent(SAVE_BUTTON);
                     wiigee.getDevice().fireButtonReleasedEvent(SAVE_BUTTON);
 
                     int commandPos = spnCommand.getSelectedItemPosition();
                     gestureIdCommand.put(gestureID, commandPos);
                     System.out.println(gestureIdCommand);
-                    wiigee.getDevice().getProcessingUnit().saveGesture(gestureID, "Test");
-                    //SharedPreferences.Editor mEditor = mPrefs.edit();
+                    //wiigee.getDevice().getProcessingUnit().saveGesture(gestureID, "Gesture" + gestureID);
+                    //wiigee.getDevice().getProcessingUnit().saveGesture(1, "Gesture" + gestureID);
+                    wiigee.getDevice().getProcessingUnit().saveClassifier("dcc_gestures");
+                    editor.putInt(gestureID + "", commandPos);
+                    editor.apply();
 
                     gestureID++;
                 }
@@ -170,8 +192,15 @@ public class GestureActivity extends AppCompatActivity {
     }
 
     public void clearAllGestures(View v) {
+        for(Map.Entry entry : gestureIdCommand.entrySet()) {
+            editor.remove(entry.getKey().toString());
+        }
+        editor.apply();
         gestureIdCommand.clear();
-        wiigee = new AndroidWiigee(this);
+        wiigee.getDevice().getProcessingUnit().reset();
+        wiigee.getDevice().getProcessingUnit().saveClassifier("dcc_gestures");
+        gestureID = 0;
+        //wiigee = new AndroidWiigee(this);
     }
 /*
     public void sendTrain(View v) {

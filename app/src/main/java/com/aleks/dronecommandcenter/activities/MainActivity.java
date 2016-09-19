@@ -99,6 +99,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void launchFacial(View v) {
+        Intent intent = new Intent(this, FacialCommandActivity.class);
+        startActivity(intent);
+    }
+
     public void launchGesture(View v) {
         Intent intent = new Intent(this, GestureActivity.class);
         startActivity(intent);

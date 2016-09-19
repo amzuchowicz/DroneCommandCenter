@@ -316,15 +316,12 @@ public class ARDrone implements de.yadrone.base.IARDrone {
         final Context context2 = context;
         new CountDownTimer(millis, 100) {
             @Override
-            public void onTick(long millisUntilFinished) {
-                System.out.println("tick");
-            }
+            public void onTick(long millisUntilFinished) {}
 
             @Override
             public void onFinish() {
-                System.out.println("done");
                 ARDrone.this.hover();
-                Toast.makeText(context2, "Hovering!", Toast.LENGTH_LONG);
+                //Toast.makeText(context2, "Hovering!", Toast.LENGTH_SHORT).show();
 
             }
         }.start();

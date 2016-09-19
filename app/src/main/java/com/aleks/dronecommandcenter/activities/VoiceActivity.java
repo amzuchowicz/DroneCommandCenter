@@ -1,6 +1,8 @@
 package com.aleks.dronecommandcenter.activities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -33,6 +35,8 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
     private Intent recognizerIntent;
     private String LOG_TAG = "VoiceRecognitionActivity";
 
+    List<String> oldWords;
+    int lastCommandIndex;
     private final long DELAY = 3000;
 
     @Override
@@ -100,6 +104,8 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
         //Log.i(LOG_TAG, "onBeginningOfSpeech");
         progressBar.setIndeterminate(false);
         progressBar.setMax(10);
+        returnedText.setText("");
+        lastCommandIndex = -1;
     }
 
     @Override
@@ -129,50 +135,77 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
 
     @Override
     public void onPartialResults(Bundle partials) {
-        Log.i(LOG_TAG, "onPartialResults");
-        ArrayList<String> words = partials.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-        String text = "";
-        for (String word : words) {
-            //if(word.equals("take off") || word.equals("takeoff")) {
-            //    word = "<font color=#00ff00>" + word + "</font>";
-            //}
-            text += word + "\n";
+        //Log.i(LOG_TAG, "onPartialResults");
+        ArrayList<String> newWords = partials.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        String words = newWords.get(0);
+
+        int newIndexTakeoff = words.lastIndexOf("take off");
+        if(newIndexTakeoff > lastCommandIndex) {
+            lastCommandIndex = newIndexTakeoff;
             if(tglPractice.isChecked()) {
-                switch (word) {
-                    case "hover":
-                    case "stop":
-                        drone.hover();
-                        break;
-                    case "take off":
-                    case "takeoff":
-                        drone.takeOff();
-                        break;
-                    case "land":
-                        drone.land();
-                        break;
-                    case "forward":
-                        drone.forward();
-                        drone.doFor(DELAY, this);
-                        break;
-                    case "backward":
-                    case "back":
-                        drone.backward();
-                        drone.doFor(DELAY, this);
-                        break;
-                    case "left":
-                        drone.goLeft();
-                        drone.doFor(DELAY, this);
-                        break;
-                    case "right":
-                        drone.goRight();
-                        drone.doFor(DELAY, this);
-                        break;
-                    default:
-                        //do nothing
-                }
+                System.out.println("take off");
+                drone.takeOff();
+                drone.doFor(DELAY, this);
             }
         }
-        returnedText.setText(Html.fromHtml(text));
+        words = words.replace("take off", "<font color=#00ff00>take off</font> ");
+
+        int newIndexLand = words.lastIndexOf("take off");
+        if(newIndexLand > lastCommandIndex) {
+            lastCommandIndex = newIndexLand;
+            if(tglPractice.isChecked()) {
+                System.out.println("land");
+                drone.land();
+                drone.doFor(DELAY, this);
+            }
+        }
+        words = words.replace("land", "<font color=#00ff00>land</font> ");
+
+        int newIndexForward = words.lastIndexOf("forward");
+        if(newIndexForward > lastCommandIndex) {
+            lastCommandIndex = newIndexForward;
+            System.out.println("forward");
+            if(tglPractice.isChecked()) {
+                drone.forward();
+                drone.doFor(DELAY, this);
+            }
+        }
+        words = words.replace("forward", "<font color=#00ff00>forward</font> ");
+
+        int newIndexBackward = words.lastIndexOf("backward");
+        if(newIndexBackward > lastCommandIndex) {
+            lastCommandIndex = newIndexBackward;
+            if(tglPractice.isChecked()) {
+                System.out.println("backward");
+                drone.backward();
+                drone.doFor(DELAY, this);
+            }
+        }
+        words = words.replace("backward", "<font color=#00ff00>backward</font> ");
+
+        int newIndexLeft = words.lastIndexOf("left");
+        if(newIndexLeft > lastCommandIndex) {
+            lastCommandIndex = newIndexLeft;
+            if(tglPractice.isChecked()) {
+                System.out.println("left");
+                drone.goLeft();
+                drone.doFor(DELAY, this);
+            }
+        }
+        words = words.replace("left", "<font color=#00ff00>left</font> ");
+
+        int newIndexRight = words.lastIndexOf("right");
+        if(newIndexRight > lastCommandIndex) {
+            lastCommandIndex = newIndexRight;
+            if(tglPractice.isChecked()) {
+                System.out.println("right");
+                drone.goRight();
+                drone.doFor(DELAY, this);
+            }
+        }
+        words = words.replace("right", "<font color=#00ff00>right</font> ");
+
+        returnedText.setText(Html.fromHtml(words));
     }
 
     @Override

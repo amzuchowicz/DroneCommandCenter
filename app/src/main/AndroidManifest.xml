@@ -47,6 +47,11 @@
             android:parentActivityName=".activities.MainActivity">
         </activity>
         <activity
+            android:name=".activities.FacialCommandActivity"
+            android:label="Facial Command Control"
+            android:parentActivityName=".activities.MainActivity">
+        </activity>
+        <activity
             android:name=".activities.GestureActivity"
             android:label="Gesture Control"
             android:parentActivityName=".activities.MainActivity"

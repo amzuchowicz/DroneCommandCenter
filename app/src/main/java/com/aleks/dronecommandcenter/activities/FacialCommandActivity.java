@@ -70,7 +70,7 @@ public class FacialCommandActivity extends AppCompatActivity implements EngineIn
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_facialcommand);
-		engineConnector =EngineConnector.shareInstance();
+		engineConnector = EngineConnector.shareInstance();
 		//engineConnector.delegate = this;
 		mappingAction = new Vector<String>();
 		mappingAction.add("Neutral");
