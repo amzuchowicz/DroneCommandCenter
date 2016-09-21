@@ -61,7 +61,9 @@ public class GestureActivity extends AppCompatActivity {
         wiigee.setTrainButton(TRAIN_BUTTON);
         wiigee.setRecognitionButton(RECOGNISE_BUTTON);
         wiigee.setCloseGestureButton(SAVE_BUTTON);
-        //wiigee.getDevice();
+
+        final ToggleButton tglPractice = (ToggleButton) findViewById(R.id.tglPractice);
+        final TextView tvRecognised = (TextView) findViewById(R.id.tvRecognised);
 
         prefs = getSharedPreferences("com.aleks.dronecommandcenter.gestures", Context.MODE_PRIVATE);
         editor = prefs.edit();
@@ -89,14 +91,15 @@ public class GestureActivity extends AppCompatActivity {
                     int commandPos = gestureIdCommand.get(event.getId());
                     if(event.isValid()) {
                         result = "Recognised: " + spnCommand.getItemAtPosition(commandPos).toString();
-                        ToggleButton tglPractice = (ToggleButton) findViewById(R.id.tglPractice);
                         if (tglPractice.isChecked()) {
                             switch (commandPos) {
                                 case 0:
-                                    drone.takeOff();
+                                    drone.up();
+                                    drone.doFor(DELAY, getApplicationContext());
                                     break;
                                 case 1:
-                                    drone.land();
+                                    drone.down();
+                                    drone.doFor(DELAY, getApplicationContext());
                                     break;
                                 case 2:
                                     drone.forward();
@@ -120,15 +123,10 @@ public class GestureActivity extends AppCompatActivity {
                         }
                     }
                 }
-
                 //Toast.makeText(getApplicationContext(), result, Toast.LENGTH_SHORT).show();
-                TextView tvRecognised = (TextView) (findViewById(R.id.tvRecognised));
                 tvRecognised.setText(result);
-                //System.out.println(event.);
             }
         });
-        //wiigee.addGestureListener(gl);
-        //wiigee.getDevice().saveGesture(0, "test.txt");
 
         btnTrain = (Button) findViewById(R.id.btnTrain);
         btnTrain.setOnTouchListener(new View.OnTouchListener() {

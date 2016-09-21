@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -7,65 +7,50 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
-    tools:context=".activities.MainActivity">
+    tools:context=".activities.MainActivity"
+    android:orientation="vertical">
 
     <include
-        android:layout_width="145dp"
+        android:layout_width="140dp"
         android:layout_height="137dp"
         layout="@layout/layout_bcisensors"
         android:id="@+id/BCISensors"
         android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_alignEnd="@+id/tvBCIBattery"
-        android:layout_row="0"
-        android:layout_column="0" />
+        android:layout_toStartOf="@+id/tvDroneBattery" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="BCI Battery"
+        android:text="BCI Disconnected!"
         android:id="@+id/tvBCIBattery"
+        android:layout_below="@+id/BCISensors"
         android:layout_alignParentStart="true"
-        android:layout_row="1"
-        android:layout_column="0" />
+        android:layout_toStartOf="@+id/tvDroneBattery" />
 
     <TextView
+        android:text="Drone sensors:"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Drone Battery"
-        android:id="@+id/tvDroneBattery"
-        android:layout_alignBaseline="@+id/btnBCIStats"
-        android:layout_alignBottom="@+id/btnBCIStats"
+        android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_row="1"
-        android:layout_column="1" />
+        android:id="@+id/tvDroneSensors"
+        android:layout_toEndOf="@+id/BCISensors"
+        android:layout_above="@+id/tvBCIBattery"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Button
         android:layout_width="234dp"
         android:layout_height="70dp"
         android:text="Launch Mental Control"
         android:id="@+id/btnBCIStats"
-        android:onClick="getBCIStats"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
+        android:onClick="launchMental"
         android:layout_row="2"
         android:layout_column="0"
-        android:layout_columnSpan="2" />
-
-    <Button
-        android:layout_width="234dp"
-        android:layout_height="70dp"
-        android:text="Launch Facial Control"
-        android:id="@+id/btnlaunchFacial"
-        android:onClick="launchFacial"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
-        android:layout_row="4"
-        android:layout_column="0"
-        android:nestedScrollingEnabled="false" />
+        android:layout_columnSpan="2"
+        android:layout_below="@+id/tvBCIBattery"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="234dp"
@@ -73,10 +58,10 @@
         android:text="Launch Gesture Control"
         android:id="@+id/btnlaunchGesture"
         android:onClick="launchGesture"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
         android:layout_row="3"
-        android:layout_column="0" />
+        android:layout_column="0"
+        android:layout_below="@+id/btnBCIStats"
+        android:layout_alignParentStart="true" />
 
     <Button
         android:layout_width="234dp"
@@ -84,10 +69,20 @@
         android:text="Launch Voice Control"
         android:id="@+id/btnlaunchVoice"
         android:onClick="launchVoice"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true"
         android:layout_row="4"
         android:layout_column="0"
-        android:nestedScrollingEnabled="false" />
+        android:nestedScrollingEnabled="false"
+        android:layout_below="@+id/btnlaunchGesture"
+        android:layout_alignParentStart="true" />
 
-</LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Drone Disconnected!"
+        android:id="@+id/tvDroneBattery"
+        android:layout_alignBaseline="@+id/tvBCIBattery"
+        android:layout_alignBottom="@+id/tvBCIBattery"
+        android:layout_alignParentEnd="true" />
+
+</RelativeLayout>

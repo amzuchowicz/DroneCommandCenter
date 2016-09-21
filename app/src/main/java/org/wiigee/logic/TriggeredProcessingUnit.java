@@ -198,7 +198,9 @@ public class TriggeredProcessingUnit extends ProcessingUnit {
 
     @Override
     public void loadClassifier(String filename) {
-        this.classifier = FileIO.readClassifier(filename);
+         if(FileIO.readClassifier(filename) != null) {
+            this.classifier = FileIO.readClassifier(filename);
+         }
     }
 
 

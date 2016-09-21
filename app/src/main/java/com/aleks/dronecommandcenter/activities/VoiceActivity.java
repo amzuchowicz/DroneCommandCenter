@@ -3,6 +3,7 @@ package com.aleks.dronecommandcenter.activities;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -33,40 +34,27 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
     private ProgressBar progressBar;
     private SpeechRecognizer speech = null;
     private Intent recognizerIntent;
-    private String LOG_TAG = "VoiceRecognitionActivity";
+    private String LOG_TAG = "VoiceRecogActivity";
 
-    List<String> oldWords;
     int lastCommandIndex;
     private final long DELAY = 3000;
+    private final long DELAY_ALT = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voice);
+
         returnedText = (TextView) findViewById(R.id.textView1);
         progressBar = (ProgressBar) findViewById(R.id.progressBar1);
         toggleButton = (ToggleButton) findViewById(R.id.toggleButton1);
         tglPractice = (ToggleButton) findViewById(R.id.tglPractice);
 
         progressBar.setVisibility(View.INVISIBLE);
-        speech = SpeechRecognizer.createSpeechRecognizer(this);
-        speech.setRecognitionListener(this);
-        recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en");
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
-        //recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-        // 30 sec min wait before stopping recog
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, Long.valueOf(30000));
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
 
         toggleButton.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
             @Override
-            public void onCheckedChanged(CompoundButton buttonView,
-                                         boolean isChecked) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     progressBar.setVisibility(View.VISIBLE);
                     progressBar.setIndeterminate(true);
@@ -87,6 +75,18 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
     @Override
     public void onResume() {
         super.onResume();
+        speech = SpeechRecognizer.createSpeechRecognizer(this);
+        speech.setRecognitionListener(this);
+        recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
+        //recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        // 30 sec min wait before stopping recog
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, Long.valueOf(30000));
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
     }
 
     @Override
@@ -96,7 +96,6 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
             speech.destroy();
             Log.i(LOG_TAG, "destroy");
         }
-
     }
 
     @Override
@@ -130,7 +129,7 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
 
     @Override
     public void onEvent(int arg0, Bundle arg1) {
-        Log.i(LOG_TAG, "onEvent");
+        //Log.i(LOG_TAG, "onEvent");
     }
 
     @Override
@@ -139,72 +138,51 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
         ArrayList<String> newWords = partials.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
         String words = newWords.get(0);
 
-        int newIndexTakeoff = words.lastIndexOf("take off");
-        if(newIndexTakeoff > lastCommandIndex) {
-            lastCommandIndex = newIndexTakeoff;
-            if(tglPractice.isChecked()) {
-                System.out.println("take off");
-                drone.takeOff();
-                drone.doFor(DELAY, this);
-            }
-        }
-        words = words.replace("take off", "<font color=#00ff00>take off</font> ");
+        for(String command : getResources().getStringArray(R.array.voice_array)) {
+            int newIndexCommand = words.lastIndexOf(command);
+            if (newIndexCommand > lastCommandIndex) {
+                lastCommandIndex = newIndexCommand;
 
-        int newIndexLand = words.lastIndexOf("take off");
-        if(newIndexLand > lastCommandIndex) {
-            lastCommandIndex = newIndexLand;
-            if(tglPractice.isChecked()) {
-                System.out.println("land");
-                drone.land();
-                drone.doFor(DELAY, this);
+                if (tglPractice.isChecked()) {
+                    System.out.println(command);
+                    switch (command) {
+                        case "take off":
+                            drone.takeOff();
+                            break;
+                        case "land":
+                            drone.land();
+                            break;
+                        case "forward":
+                            drone.forward();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        case "backward":
+                            drone.backward();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        case "left":
+                            drone.goLeft();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        case "right":
+                            drone.goRight();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        case "upward":
+                            drone.up();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        case "downward":
+                            drone.down();
+                            drone.doFor(DELAY, getApplicationContext());
+                            break;
+                        default:
+                            //do nothing
+                    }
+                }
             }
+            words = words.replace(command, "<font color=#ff4081>" + command + "</font> ");
         }
-        words = words.replace("land", "<font color=#00ff00>land</font> ");
-
-        int newIndexForward = words.lastIndexOf("forward");
-        if(newIndexForward > lastCommandIndex) {
-            lastCommandIndex = newIndexForward;
-            System.out.println("forward");
-            if(tglPractice.isChecked()) {
-                drone.forward();
-                drone.doFor(DELAY, this);
-            }
-        }
-        words = words.replace("forward", "<font color=#00ff00>forward</font> ");
-
-        int newIndexBackward = words.lastIndexOf("backward");
-        if(newIndexBackward > lastCommandIndex) {
-            lastCommandIndex = newIndexBackward;
-            if(tglPractice.isChecked()) {
-                System.out.println("backward");
-                drone.backward();
-                drone.doFor(DELAY, this);
-            }
-        }
-        words = words.replace("backward", "<font color=#00ff00>backward</font> ");
-
-        int newIndexLeft = words.lastIndexOf("left");
-        if(newIndexLeft > lastCommandIndex) {
-            lastCommandIndex = newIndexLeft;
-            if(tglPractice.isChecked()) {
-                System.out.println("left");
-                drone.goLeft();
-                drone.doFor(DELAY, this);
-            }
-        }
-        words = words.replace("left", "<font color=#00ff00>left</font> ");
-
-        int newIndexRight = words.lastIndexOf("right");
-        if(newIndexRight > lastCommandIndex) {
-            lastCommandIndex = newIndexRight;
-            if(tglPractice.isChecked()) {
-                System.out.println("right");
-                drone.goRight();
-                drone.doFor(DELAY, this);
-            }
-        }
-        words = words.replace("right", "<font color=#00ff00>right</font> ");
-
         returnedText.setText(Html.fromHtml(words));
     }
 

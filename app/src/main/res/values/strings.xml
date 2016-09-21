@@ -10,12 +10,23 @@
     </string-array>
 
     <string-array name="gesture_array">
-        <item>Take Off</item>
-        <item>Land</item>
+        <item>Take Off/Up</item>
+        <item>Land/Down</item>
         <item>Forward</item>
         <item>Backward</item>
         <item>Left</item>
         <item>Right</item>
+    </string-array>
+
+    <string-array name="voice_array">
+        <item>take off</item>
+        <item>land</item>
+        <item>forward</item>
+        <item>backward</item>
+        <item>left</item>
+        <item>right</item>
+        <item>upward</item>
+        <item>downward</item>
     </string-array>
 
 </resources>

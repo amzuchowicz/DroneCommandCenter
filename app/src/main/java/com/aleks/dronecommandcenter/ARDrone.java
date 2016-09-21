@@ -16,6 +16,8 @@ import java.util.StringTokenizer;
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.command.VideoChannel;
 import de.yadrone.base.configuration.ConfigurationManager;
+import de.yadrone.base.navdata.Altitude;
+import de.yadrone.base.navdata.AltitudeListener;
 import de.yadrone.base.navdata.ControlState;
 import de.yadrone.base.navdata.ControlStateListener;
 import de.yadrone.base.navdata.DroneState;
@@ -52,6 +54,7 @@ public class ARDrone implements de.yadrone.base.IARDrone {
 
     private int batteryLevel;
     private ControlState state;
+    private int altitude;
 
     /** constructor */
     public ARDrone() {
@@ -73,6 +76,7 @@ public class ARDrone implements de.yadrone.base.IARDrone {
         this.speedListener = new HashSet<ISpeedListener>();
         this.getNavDataManager().addBatteryListener(batteryListener);
         this.getNavDataManager().addStateListener(stateListener);
+        this.getNavDataManager().addAltitudeListener(altitudeListener);
     }
 
     public synchronized CommandManager getCommandManager() {
@@ -218,14 +222,28 @@ public class ARDrone implements de.yadrone.base.IARDrone {
 
     @Override
     public void up() {
-        if (commandManager != null)
-            commandManager.up(speed);
+        if (commandManager != null) {
+            if (state == ControlState.LANDED) {
+                //commandManager.emergency();
+                commandManager.takeOff();
+            } else {
+                commandManager.up(speed);
+            }
+            System.out.println(state);
+        }
     }
 
     @Override
     public void down() {
-        if (commandManager != null)
-            commandManager.down(speed);
+        if (commandManager != null) {
+            if(altitude > 1000) {
+                // when drone is above 1m
+                commandManager.down(speed);
+            }
+            else {
+                commandManager.landing();
+            }
+        }
     }
 
     @Override
@@ -305,10 +323,23 @@ public class ARDrone implements de.yadrone.base.IARDrone {
     private StateListener stateListener = new StateListener() {
         @Override
         public void stateChanged(DroneState droneState) {
+
         }
         @Override
         public void controlStateChanged(ControlState controlState) {
             ARDrone.this.state = controlState;
+        }
+    };
+
+    private AltitudeListener altitudeListener = new AltitudeListener() {
+        @Override
+        public void receivedAltitude(int i) {
+            ARDrone.this.altitude = i; // in millimeters
+        }
+
+        @Override
+        public void receivedExtendedAltitude(Altitude altitude) {
+
         }
     };
 

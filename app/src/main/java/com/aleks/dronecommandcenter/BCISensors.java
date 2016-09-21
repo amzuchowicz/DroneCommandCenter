@@ -1,15 +1,9 @@
 package com.aleks.dronecommandcenter;
 
-import android.test.suitebuilder.annotation.Suppress;
 import android.view.View;
 import android.widget.ImageView;
-
-import com.emotiv.insight.IEdk;
 import com.emotiv.insight.IEmoStateDLL;
 
-/**
- * Created by Aleks on 3/08/2016.
- */
 @SuppressWarnings("WrongConstant")
 public final class BCISensors {
     private static final int CMS = 0; //stuck on 4?

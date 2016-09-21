@@ -1,9 +1,11 @@
 package com.aleks.dronecommandcenter.activities;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +26,7 @@ import com.aleks.dronecommandcenter.DroneCommandCenterApp;
 import com.aleks.dronecommandcenter.EngineConnector;
 import com.aleks.dronecommandcenter.EngineInterface;
 import com.aleks.dronecommandcenter.R;
+import com.emotiv.emotivcloud.EmotivCloudClient;
 import com.emotiv.insight.IEmoStateDLL.IEE_MentalCommandAction_t;
 import com.emotiv.insight.MentalCommandDetection;
 import com.emotiv.insight.MentalCommandDetection.IEE_MentalCommandTrainingControl_t;
@@ -39,8 +42,10 @@ import de.yadrone.base.navdata.ControlState;
 public class MentalCommandActivity extends AppCompatActivity implements EngineInterface {
 
     ARDrone drone;
+	private final long DELAY = 3000;
 	EngineConnector engineConnector;
-	
+
+    ToggleButton tglPractice;
 	Spinner spinAction;
 	Button btnTrain,btnClear;
 	ProgressBar progressBarTime,progressPower;
@@ -57,6 +62,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 	float startRight    = 0;
 	float widthScreen   = 0;
 	boolean isTrainning = false;
+    boolean isCoolingDown = false;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +75,10 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 		engineConnector = app.getEngineConnector();
 		engineConnector.delegate = this;
 		init();
+
+        //EmotivCloudClient.EC_Connect(this);
+        //EmotivCloudClient.EC_Login("s.loke@latrobe.edu.au", "swloke12-Emotiv");
+        //EmotivCloudClient.EC_LoadUserProfile(0, 0, 0, -1);
 
 		new Thread(new Runnable() {
 			public void run()
@@ -89,8 +99,9 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 			}
 		}).start();
 	}
-	public void init()
-	{
+
+	public void init() {
+        tglPractice = (ToggleButton) findViewById(R.id.tglPractice);
 			spinAction=(Spinner)findViewById(R.id.spnCommand);
 			btnTrain=(Button)findViewById(R.id.btstartTraing);
 			btnClear=(Button)findViewById(R.id.btClearData);
@@ -141,7 +152,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
 					if(!engineConnector.isConnected)
-						Toast.makeText(MentalCommandActivity.this,"You need to connect to your headset.",Toast.LENGTH_SHORT).show();
+						Toast.makeText(MentalCommandActivity.this,"You need to connect to your headset!",Toast.LENGTH_SHORT).show();
 					else{
 						switch (indexAction) {
 						case 0:
@@ -205,7 +216,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 
 	public void startTrainingMentalcommand(IEE_MentalCommandAction_t MentalCommandAction) {
 		isTrainning = engineConnector.startTrainingMetalcommand(isTrainning, MentalCommandAction);
-		btnTrain.setText((isTrainning) ? "Abort Trainning" : "Train");
+		btnTrain.setText((isTrainning) ? "Abort" : "Train");
 	}
 	
 	public void setDataSpinner()
@@ -276,12 +287,18 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 				if(imgBox.getScaleX() == 1.0f && startLeft > 0) {
 					imgBox.setRight((int) widthScreen);
 					power = (_currentAction == IEE_MentalCommandAction_t.MC_LEFT.ToInt()) ? power*3 : power*-3;
-					imgBox.setLeft((int) (power > 0 ? Math.max(0, (int)(imgBox.getLeft() - power)) : Math.min(widthScreen - imgBox.getMeasuredWidth(), (int)(imgBox.getLeft() - power))));
+					if (power > 0)
+						imgBox.setLeft((int) Math.max(0, (int) (imgBox.getLeft() - power)));
+					else
+						imgBox.setLeft((int) Math.min(widthScreen - imgBox.getMeasuredWidth(), (int) (imgBox.getLeft() - power)));
 				}
 			}
 			else if(imgBox.getLeft() != startLeft && startLeft > 0){
 				power = (imgBox.getLeft() > startLeft) ? 6 : -6;
-				imgBox.setLeft(power > 0  ? Math.max((int)startLeft, (int)(imgBox.getLeft() - power)) : Math.min((int)startLeft, (int)(imgBox.getLeft() - power)));
+                if (power > 0)
+                    imgBox.setLeft(Math.max((int) startLeft, (int) (imgBox.getLeft() - power)));
+                else
+                    imgBox.setLeft(Math.min((int) startLeft, (int) (imgBox.getLeft() - power)));
 			}
 			if(((_currentAction == IEE_MentalCommandAction_t.MC_PULL.ToInt()) || (_currentAction == IEE_MentalCommandAction_t.MC_PUSH.ToInt())) && power > 0) {
 				if(imgBox.getLeft() != startLeft)
@@ -374,7 +391,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 		alertDialogBuilder.setTitle("Training Failed");
 		// set dialog message
 		alertDialogBuilder
-				.setMessage("Signal is noisy. Can't training")
+				.setMessage("Signal is too noisy. Can't train")
 				.setCancelable(false)
 				.setPositiveButton("OK",
 						new DialogInterface.OnClickListener() {
@@ -462,33 +479,49 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
     }
 
     public void moveDrone() {
-        ToggleButton tglPractice = (ToggleButton) findViewById(R.id.tglPractice);
-        if(tglPractice.isChecked()) {
-            if( _currentAction == IEE_MentalCommandAction_t.MC_LEFT.ToInt() && _currentPower > 0) {
+        float power = _currentPower;
+        if(tglPractice.isChecked() && !isCoolingDown) {
+            //drone.reset();
+            if( _currentAction == IEE_MentalCommandAction_t.MC_LEFT.ToInt() && power > 0) {
                 drone.goLeft();
-                System.out.print("Drone moved left!");
+                drone.doFor(DELAY, this);
+                cooldown(5000);
+                System.out.println("Drone moved left!");
             }
-            if(_currentAction == IEE_MentalCommandAction_t.MC_RIGHT.ToInt() && _currentPower > 0) {
+            if(_currentAction == IEE_MentalCommandAction_t.MC_RIGHT.ToInt() && power > 0) {
                 drone.goRight();
-                System.out.print("Drone moved right!");
+                System.out.println("Drone moved right!");
             }
-            if(_currentAction == IEE_MentalCommandAction_t.MC_PULL.ToInt() && _currentPower > 0) {
-                drone.backward();
-                System.out.print("Drone moved backward!");
+            if(_currentAction == IEE_MentalCommandAction_t.MC_PULL.ToInt() && power > 0.1) {
+                drone.land();
+                cooldown(5000);
+                //drone.backward();
+                System.out.println("Drone moved backward!");
             }
-            if(_currentAction == IEE_MentalCommandAction_t.MC_PUSH.ToInt()) {
-                System.out.print("Drone moved forward with " + _currentPower + " power!");
-                drone.forward();
-            }
-            else {
-                //drone.hover();
-                //System.out.println("Power: " + _currentPower);
+            if(IEE_MentalCommandAction_t.MC_PUSH.ToInt() == _currentAction && power > 0.1 ) {
+                System.out.println("Drone moved forward with " + power + " power!");
+                if(drone.getState() == ControlState.LANDED) {
+                    drone.takeOff();
+                }
+                cooldown(5000);
+				//drone.forward();
+				//drone.doFor(DELAY, this);
             }
         }
+		//System.out.println(_currentAction + " " + power);
     }
 
-	//public void onBackPressed() {
-	//	 android.os.Process.killProcess(android.os.Process.myPid());
-	//	  finish();
-	// }
+    public void cooldown(long millis) {
+        isCoolingDown = true;
+        new CountDownTimer(millis, 100) {
+            @Override
+            public void onTick(long millisUntilFinished) {}
+
+            @Override
+            public void onFinish() {
+                isCoolingDown = false;
+                System.out.println("Cooled down");
+            }
+        }.start();
+    }
 }

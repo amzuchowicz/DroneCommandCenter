@@ -7,9 +7,7 @@ import java.util.List;
 
 import de.yadrone.base.*;
 
-/**
- * Created by Aleks on 1/08/2016.
- */
+
 public class DroneCommandCenterApp extends Application {
     // The drone is kept in the application context so that all activities use the same drone instance
     private ARDrone drone;
