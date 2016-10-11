@@ -23,6 +23,7 @@ import de.yadrone.base.navdata.ControlStateListener;
 import de.yadrone.base.navdata.DroneState;
 import de.yadrone.base.navdata.NavDataManager;
 import de.yadrone.base.navdata.StateListener;
+import de.yadrone.base.navdata.VelocityListener;
 import de.yadrone.base.utils.ARDroneUtils;
 import de.yadrone.base.video.VideoDecoder;
 import de.yadrone.base.video.VideoManager;
@@ -56,6 +57,14 @@ public class ARDrone implements de.yadrone.base.IARDrone {
     private ControlState state;
     private int altitude;
 
+    private CountDownTimer distanceTimer;
+    private long currentCount;
+    private float distance = 0.0f;
+    private boolean started = false;
+    private String direction = "none";
+
+    CountDownTimer cdt;
+
     /** constructor */
     public ARDrone() {
         this(IP_ADDRESS);
@@ -77,6 +86,7 @@ public class ARDrone implements de.yadrone.base.IARDrone {
         this.getNavDataManager().addBatteryListener(batteryListener);
         this.getNavDataManager().addStateListener(stateListener);
         this.getNavDataManager().addAltitudeListener(altitudeListener);
+        this.getNavDataManager().addVelocityListener(velocityListener);
     }
 
     public synchronized CommandManager getCommandManager() {
@@ -170,8 +180,11 @@ public class ARDrone implements de.yadrone.base.IARDrone {
 
     @Override
     public void landing() {
-        if (commandManager != null)
+        if (commandManager != null) {
             commandManager.landing();
+            commandManager.hover();
+            System.out.println("LAND");
+        }
     }
 
     public void land() {
@@ -184,9 +197,15 @@ public class ARDrone implements de.yadrone.base.IARDrone {
         {
             // we send emergency command before we take off which will toggle emergency mode off if the drone is actualy in emergency mode
             // contributed by Naushad, see post on https://projects.ardrone.org/boards/1/topics/show/5259 from 30.04.2014
-            commandManager.emergency();
-
+            if(state != null) {
+                if (state.equals(ControlState.LANDED)) {
+                    // only issue pre take off emergency if on the ground (useful if take off issued accidentally when flying).
+                    commandManager.emergency();
+                }
+            }
             commandManager.takeOff();
+            commandManager.hover();
+            System.out.println("TAKE OFF");
         }
     }
 
@@ -198,14 +217,36 @@ public class ARDrone implements de.yadrone.base.IARDrone {
 
     @Override
     public void forward() {
-        if (commandManager != null)
+        if (commandManager != null) {
             commandManager.forward(speed);
+            System.out.println("FORWARD");
+
+            direction = "forward";
+            currentCount = 0;
+            if(distanceTimer != null) {
+                distanceTimer.cancel();
+                distance = 0;
+                currentCount = 0;
+            }
+            doForDistance();
+        }
     }
 
     @Override
     public void backward() {
-        if (commandManager != null)
+        if (commandManager != null) {
             commandManager.backward(speed);
+            System.out.println("BACKWARD");
+            direction = "backward";
+
+            currentCount = 0;
+            if(distanceTimer != null) {
+                distanceTimer.cancel();
+                distance = 0;
+                currentCount = 0;
+            }
+            doForDistance();
+        }
     }
 
     @Override
@@ -223,39 +264,52 @@ public class ARDrone implements de.yadrone.base.IARDrone {
     @Override
     public void up() {
         if (commandManager != null) {
-            if (state == ControlState.LANDED) {
-                //commandManager.emergency();
-                commandManager.takeOff();
-            } else {
-                commandManager.up(speed);
+            if(state != null) {
+                if (state.equals(ControlState.LANDED)) {
+                    //commandManager.emergency();
+                    commandManager.takeOff();
+                } else {
+                    commandManager.up(25);
+                    System.out.println("UPWARD");
+                    doFor(3000);
+                }
+                //System.out.println(state);
             }
-            System.out.println(state);
+
         }
     }
 
     @Override
     public void down() {
         if (commandManager != null) {
-            if(altitude > 1000) {
+            if(altitude > 1000) { //was 700
                 // when drone is above 1m
-                commandManager.down(speed);
+                commandManager.down(25);
+                System.out.println("DOWNWARD");
+                doFor(3000);
             }
             else {
                 commandManager.landing();
+                System.out.println("LAND");
             }
+
         }
     }
 
     @Override
     public void goRight() {
-        if (commandManager != null)
+        if (commandManager != null) {
             commandManager.goRight(speed);
+            System.out.println("RIGHT");
+        }
     }
 
     @Override
     public void goLeft() {
-        if (commandManager != null)
+        if (commandManager != null) {
             commandManager.goLeft(speed);
+            System.out.println("LEFT");
+        }
     }
 
     @Override
@@ -343,15 +397,83 @@ public class ARDrone implements de.yadrone.base.IARDrone {
         }
     };
 
-    public void doFor(long millis, Context context) {
-        final Context context2 = context;
-        new CountDownTimer(millis, 100) {
+    public void doForDistance() {
+        started = true;
+
+        distanceTimer = new CountDownTimer(5000, 1) {
             @Override
-            public void onTick(long millisUntilFinished) {}
+            public void onTick(long millisUntilFinished) {
+                currentCount = 5000 - millisUntilFinished;
+            }
 
             @Override
             public void onFinish() {
                 ARDrone.this.hover();
+                distance = 0.0f;
+                currentCount = 0;
+                direction = "none";
+                //Toast.makeText(context2, "Hovering!", Toast.LENGTH_SHORT).show();
+
+            }
+        }.start();
+    }
+
+    private VelocityListener velocityListener = new VelocityListener() {
+        @Override
+        public void velocityChanged(float vx, float vy, float vz) {
+
+            if(direction.equals("forward")) {
+                if (currentCount > 0 && vx > 0.0f) {
+                    distance = (vx / 1000.0f) * (currentCount) + distance;
+                    System.out.println("DISTANCE = " + distance);
+
+                    distanceTimer.cancel();
+                    currentCount = 0;
+                    distanceTimer.start();
+
+                    if (distance > 1000.0f) {
+                        hover();
+                        distance = 0.0f;
+                        distanceTimer.cancel();
+                        currentCount = 0;
+                        started = false;
+                        direction = "none";
+                    }
+                }
+            }
+            else if(direction.equals("backward")) {
+                if (currentCount > 0) {
+                    distance = ((-vx) / 1000.0f) * (currentCount) + distance;
+                    System.out.println("DISTANCE = " + distance);
+
+                    distanceTimer.cancel();
+                    currentCount = 0;
+                    distanceTimer.start();
+
+                    if (distance > 1000.0f) {
+                        hover();
+                        distance = 0.0f;
+                        distanceTimer.cancel();
+                        currentCount = 0;
+                        started = false;
+                        direction = "none";
+                    }
+                }
+            }
+        }
+    };
+
+    public void doFor(final long millis) {
+       cdt = new CountDownTimer(millis, 100) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                System.out.println(millis - millisUntilFinished);
+            }
+
+            @Override
+            public void onFinish() {
+                System.out.println("HOVERING");
+                hover();
                 //Toast.makeText(context2, "Hovering!", Toast.LENGTH_SHORT).show();
 
             }

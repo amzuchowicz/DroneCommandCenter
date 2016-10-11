@@ -16,6 +16,7 @@
         <item>Backward</item>
         <item>Left</item>
         <item>Right</item>
+        <item>Photo</item>
     </string-array>
 
     <string-array name="voice_array">
@@ -25,8 +26,9 @@
         <item>backward</item>
         <item>left</item>
         <item>right</item>
-        <item>upward</item>
-        <item>downward</item>
+        <item>up</item>
+        <item>down</item>
+        <item>photo</item>
     </string-array>
 
 </resources>

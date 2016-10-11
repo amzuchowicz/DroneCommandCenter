@@ -40,7 +40,7 @@ public class GestureActivity extends AppCompatActivity {
     //private BebopDrone bebop;
     private int gestureID = 0;
     private HashMap<Integer, Integer> gestureIdCommand = new HashMap<>();
-    private final long DELAY = 3000;
+    private final long DELAY = 2000;
 
     private Button btnTrain;
     private Button btnRecognise;
@@ -95,27 +95,30 @@ public class GestureActivity extends AppCompatActivity {
                             switch (commandPos) {
                                 case 0:
                                     drone.up();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    //drone.doFor(DELAY);
                                     break;
                                 case 1:
                                     drone.down();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    //drone.doFor(DELAY);
                                     break;
                                 case 2:
                                     drone.forward();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    //drone.doFor(DELAY);
                                     break;
                                 case 3:
                                     drone.backward();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    //drone.doFor(DELAY);
                                     break;
                                 case 4:
                                     drone.goLeft();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    drone.doFor(DELAY);
                                     break;
                                 case 5:
                                     drone.goRight();
-                                    drone.doFor(DELAY, getApplicationContext());
+                                    drone.doFor(DELAY);
+                                    break;
+                                case 6:
+                                    System.out.println("PHOTO");
                                     break;
                                 default:
                                     //do nothing

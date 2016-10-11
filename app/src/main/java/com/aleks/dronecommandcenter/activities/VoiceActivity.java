@@ -37,7 +37,7 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
     private String LOG_TAG = "VoiceRecogActivity";
 
     int lastCommandIndex;
-    private final long DELAY = 3000;
+    private final long DELAY = 2000;
     private final long DELAY_ALT = 2000;
 
     @Override
@@ -78,7 +78,7 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
         speech = SpeechRecognizer.createSpeechRecognizer(this);
         speech.setRecognitionListener(this);
         recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "");
+        //recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en-AU");
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         //recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
@@ -144,7 +144,6 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
                 lastCommandIndex = newIndexCommand;
 
                 if (tglPractice.isChecked()) {
-                    System.out.println(command);
                     switch (command) {
                         case "take off":
                             drone.takeOff();
@@ -154,27 +153,30 @@ public class VoiceActivity extends AppCompatActivity implements RecognitionListe
                             break;
                         case "forward":
                             drone.forward();
-                            drone.doFor(DELAY, getApplicationContext());
+                            //drone.doFor(DELAY);
                             break;
                         case "backward":
                             drone.backward();
-                            drone.doFor(DELAY, getApplicationContext());
+                            //drone.doFor(DELAY);
                             break;
                         case "left":
                             drone.goLeft();
-                            drone.doFor(DELAY, getApplicationContext());
+                            drone.doFor(DELAY);
                             break;
                         case "right":
                             drone.goRight();
-                            drone.doFor(DELAY, getApplicationContext());
+                            drone.doFor(DELAY);
                             break;
-                        case "upward":
+                        case "up":
                             drone.up();
-                            drone.doFor(DELAY, getApplicationContext());
+                            //drone.doFor(DELAY);
                             break;
-                        case "downward":
+                        case "down":
                             drone.down();
-                            drone.doFor(DELAY, getApplicationContext());
+                            //drone.doFor(DELAY);
+                            break;
+                        case "photo":
+                            System.out.println("PHOTO");
                             break;
                         default:
                             //do nothing

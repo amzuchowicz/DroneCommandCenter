@@ -14,10 +14,14 @@ import com.aleks.dronecommandcenter.R;
 import com.emotiv.insight.IEdk;
 import com.emotiv.insight.IEmoStateDLL;
 
+import de.yadrone.base.navdata.AcceleroListener;
+import de.yadrone.base.navdata.AcceleroPhysData;
+import de.yadrone.base.navdata.AcceleroRawData;
 import de.yadrone.base.navdata.AttitudeListener;
 import de.yadrone.base.navdata.BatteryListener;
+import de.yadrone.base.navdata.VelocityListener;
 
-public class MainActivity extends AppCompatActivity implements AttitudeListener, BatteryListener {
+public class MainActivity extends AppCompatActivity implements AttitudeListener, BatteryListener, VelocityListener, AcceleroListener {
 
     EngineConnector engineConnector;
     ARDrone drone;
@@ -51,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements AttitudeListener,
         }
         drone.getNavDataManager().addAttitudeListener(this);
         drone.getNavDataManager().addBatteryListener(this);
+        drone.getNavDataManager().addVelocityListener(this);
+        drone.getNavDataManager().addAcceleroListener(this);
 
         engineConnector = app.getEngineConnector();
 
@@ -105,12 +111,14 @@ public class MainActivity extends AppCompatActivity implements AttitudeListener,
 
     @Override
     public void attitudeUpdated(final float pitch, final float roll, final float yaw) {
+
         runOnUiThread(new Runnable() {
             public void run() {
                 TextView tvDroneSensors = (TextView) findViewById(R.id.tvDroneSensors);
                 tvDroneSensors.setText("Drone sensors:\n\nPitch: " + pitch + "\nRoll: " + roll + "\nYaw: " + yaw);
             }
         });
+
     }
 
     @Override
@@ -131,5 +139,45 @@ public class MainActivity extends AppCompatActivity implements AttitudeListener,
     @Override
     public void voltageChanged(int i) {
 
+    }
+
+    @Override
+    public void velocityChanged(final float vx, final float vy, final float vz) {
+        /*
+        runOnUiThread(new Runnable() {
+            public void run() {
+                TextView tvDroneSensors = (TextView) findViewById(R.id.tvDroneSensors);
+                tvDroneSensors.setText("Drone sensors:\n\nV: " + vx + "\nV1: " + vy + "\nV2: " + vz);
+            }
+        });
+        */
+    }
+
+    @Override
+    public void receivedRawData(final AcceleroRawData acceleroRawData) {
+        /*
+        runOnUiThread(new Runnable() {
+            public void run() {
+                TextView tvDroneSensors = (TextView) findViewById(R.id.tvDroneSensors);
+                tvDroneSensors.setText("Drone sensors:\n\nV: "
+                        + acceleroRawData.getRawAccs()[0] + "\nV1: " + acceleroRawData.getRawAccs()[1] + "\nV2: "
+                        + acceleroRawData.getRawAccs()[2]);
+            }
+        });
+        */
+    }
+
+    @Override
+    public void receivedPhysData(final AcceleroPhysData acceleroPhysData) {
+        /*
+        runOnUiThread(new Runnable() {
+            public void run() {
+                TextView tvDroneSensors = (TextView) findViewById(R.id.tvDroneSensors);
+                tvDroneSensors.setText("Drone sensors:\n\nV: "
+                        + acceleroPhysData.getPhysAccs()[0] + "\nV1: " + acceleroPhysData.getPhysAccs()[1] + "\nV2: "
+                        + acceleroPhysData.getPhysAccs()[2]);
+            }
+        });
+        */
     }
 }

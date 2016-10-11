@@ -468,7 +468,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
 
     public void sendTakeOff(View v) {
         Button btnTakeOff = (Button) findViewById(R.id.btnTakeOff);
-        if(drone.getState() == ControlState.LANDED) {
+        if(drone.getState().equals(ControlState.LANDED)) {
             drone.takeOff();
             btnTakeOff.setText("Land");
         }
@@ -482,13 +482,13 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
         float power = _currentPower;
         if(tglPractice.isChecked() && !isCoolingDown) {
             //drone.reset();
-            if( _currentAction == IEE_MentalCommandAction_t.MC_LEFT.ToInt() && power > 0) {
-                drone.goLeft();
-                drone.doFor(DELAY, this);
+            if( _currentAction == IEE_MentalCommandAction_t.MC_LEFT.ToInt() && power > 0.1) {
+                drone.forward();
+                //drone.doFor(DELAY);
                 cooldown(5000);
                 System.out.println("Drone moved left!");
             }
-            if(_currentAction == IEE_MentalCommandAction_t.MC_RIGHT.ToInt() && power > 0) {
+            if(_currentAction == IEE_MentalCommandAction_t.MC_RIGHT.ToInt() && power > 0.1) {
                 drone.goRight();
                 System.out.println("Drone moved right!");
             }
@@ -503,6 +503,7 @@ public class MentalCommandActivity extends AppCompatActivity implements EngineIn
                 if(drone.getState() == ControlState.LANDED) {
                     drone.takeOff();
                 }
+				//drone.forward();
                 cooldown(5000);
 				//drone.forward();
 				//drone.doFor(DELAY, this);
